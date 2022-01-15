@@ -1,5 +1,6 @@
 import tkinter as tk
 import textwrap
+import random, time
 from tkinter import *
 # BioApplication class code from https://www.youtube.com/watch?v=jBUpjijYtCk
 
@@ -29,15 +30,9 @@ class BioApplication(tk.Tk):
         frame.tkraise()
 
 
-# todo Create an abstract frame class
-
 class DNAtoRNA(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
-        # Root window
-        # self.title("DNA -> RNA")
-        # self.geometry("500x200")
 
         # labels
         self.title = tk.Label(self, text='DNA -> RNA', font=("Power green", 14))
@@ -88,7 +83,10 @@ class DNACompliment(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        # label
+        # labels
+        self.title = tk.Label(self, text='DNA Compliment Finder', font=("Power green", 14))
+        self.title.pack(pady=10, padx=10)
+
         self.label = tk.Label(self, text='Insert DNA strand here!', font=("Power green", 14))
         self.label.pack()
 
@@ -129,14 +127,9 @@ class DNACompliment(tk.Frame):
         self.entry_result.config(state="disabled")
 
 
-# TODO
 class RNAtoAminoAcid(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
-        # Root window
-        # self.title("DNA -> RNA")
-        # self.geometry("500x200")
 
         # labels
         self.title = tk.Label(self, text='RNA -> Amino Acid', font=("Power green", 14))
@@ -153,7 +146,7 @@ class RNAtoAminoAcid(tk.Frame):
         self.entry_result.pack()
 
         # buttons
-        self.button = tk.Button(self, text='Convert to Amino acid/s', font=("Power green", 12))
+        self.button = tk.Button(self, text='Convert to Amino acid', font=("Power green", 12))
         self.button['command'] = self.button_clicked
         self.button.pack()
 
@@ -191,6 +184,54 @@ class RNAtoAminoAcid(tk.Frame):
 class VisualizeDNA(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+
+        # labels
+        self.title = tk.Label(self, text='DNA -> RNA', font=("Power green", 14))
+        self.title.pack(pady=10, padx=10)
+
+        self.label = tk.Label(self, text='Insert template strand here!', font=("Power green", 14))
+        self.label.pack()
+
+        # entries
+        self.entry = Entry(self, width=100)
+        self.entry.pack()
+
+        self.entry_result = Entry(self, width=100, state="disabled")
+        self.entry_result.pack()
+
+        # buttons
+        self.button = tk.Button(self, text='Convert to RNA', font=("Power green", 12))
+        self.button['command'] = self.button_clicked
+        self.button.pack()
+
+        self.rna_to_aa = tk.Button(self, text='RNA to amino acid', font=("Power green", 12),
+                                   command=lambda: controller.show_frame(RNAtoAminoAcid))
+        self.rna_to_aa.pack(fill=X, expand=TRUE, side=LEFT)
+
+        self.dna_compliment = tk.Button(self, text='DNA Compliment Finder', font=("Power green", 12),
+                                        command=lambda: controller.show_frame(DNACompliment))
+        self.dna_compliment.pack(fill=X, expand=TRUE, side=LEFT)
+
+    def button_clicked(self):
+        # enable the entry box before anything is done
+        self.entry_result.config(state="normal")
+        # Clear this textbox before inserting anything else
+        self.entry_result.delete(0, "end")
+        text = self.entry.get()
+        valid_text = is_valid_rna(text)
+
+        # Check which button was clicked, and behave accordingly
+        if not valid_text:
+            self.entry_result.insert(0, "Invalid RNA strand entered.")
+        else:
+            # call functions that divides the rna into triplets, converts to amino acids,
+            # and insert that into the result entry box.
+            self.entry_result.insert(0, convert_to_aa(divide_rna(text)))
+            # divides the original entry into triplets for readability
+            self.entry.delete(0, "end")
+            self.entry.insert(0, divide_rna(text))
+            # disable the resulting text box.
+        self.entry_result.config(state="disabled")
 
 
 def find_compliment(dna_strand: str) -> str:
@@ -248,6 +289,7 @@ def is_valid_rna(rna: str) -> bool:
 
 
 def divide_rna(rna: str) -> str:
+    rna = rna.upper()
     wrapper = textwrap.wrap(rna, 3)
     divided = ""
     for triplet in wrapper:
@@ -277,6 +319,11 @@ def convert_to_aa(rna: str) -> str:
             elif triplet in value and aa != "":
                 aa += " " + key
     return aa
+
+# todo
+# A modified version of DNA by Al Sweigart al@inventwithpython.com
+def dna_animation(template: str):
+    return
 
 
 if __name__ == "__main__":
