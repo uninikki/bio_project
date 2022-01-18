@@ -1,11 +1,13 @@
 import tkinter as tk
 import textwrap
 import random, time
+from abc import abstractmethod
 from tkinter import *
 # BioApplication class code from https://www.youtube.com/watch?v=jBUpjijYtCk
 
 
 class BioApplication(tk.Tk):
+    """The main class of the application. Has a container that contains all frames in the application."""
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         container = tk.Frame(self)
@@ -26,11 +28,19 @@ class BioApplication(tk.Tk):
         self.show_frame(DNAtoRNA)
 
     def show_frame(self, cont):
+        """Displays the frame cont."""
         frame = self.frames[cont]
         frame.tkraise()
 
 
-class DNAtoRNA(tk.Frame):
+class BaseFrame(tk.Frame):
+    @abstractmethod
+    def button_clicked(self):
+        return
+
+
+class DNAtoRNA(BaseFrame):
+    """Class that displays the DNA to RNA Frame."""
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
@@ -79,7 +89,8 @@ class DNAtoRNA(tk.Frame):
         self.entry_result.config(state="disabled")
 
 
-class DNACompliment(tk.Frame):
+class DNACompliment(BaseFrame):
+    """Class that displays the DNA Compliment Frame."""
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
@@ -127,7 +138,8 @@ class DNACompliment(tk.Frame):
         self.entry_result.config(state="disabled")
 
 
-class RNAtoAminoAcid(tk.Frame):
+class RNAtoAminoAcid(BaseFrame):
+    """Class that displays the RNA to Amino Acid Frame."""
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
@@ -181,7 +193,8 @@ class RNAtoAminoAcid(tk.Frame):
 
 
 # Todo
-class VisualizeDNA(tk.Frame):
+class VisualizeDNA(BaseFrame):
+    """Class that displays the Visualize DNA Frame."""
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
@@ -235,6 +248,7 @@ class VisualizeDNA(tk.Frame):
 
 
 def find_compliment(dna_strand: str) -> str:
+    """Given dna_strand, returns it's dna compliment."""
     dna_strand = dna_strand.upper()
     dna_compliment = ""
 
@@ -251,6 +265,7 @@ def find_compliment(dna_strand: str) -> str:
 
 
 def is_valid_template(template: str) -> bool:
+    """Returns if template is a valid dna strand or not."""
     text = template.upper()
     check = True
     for nucleotide in text:
@@ -262,6 +277,7 @@ def is_valid_template(template: str) -> bool:
 
 
 def convert_to_rna(template: str) -> str:
+    """Converts the given template to rna."""
     template = template.upper()
     rna_compliment = ""
 
@@ -278,6 +294,7 @@ def convert_to_rna(template: str) -> str:
 
 
 def is_valid_rna(rna: str) -> bool:
+    """Checks if an rna strand is valid."""
     text = rna.upper()
     check = True
     for nucleotide in text:
@@ -289,6 +306,12 @@ def is_valid_rna(rna: str) -> bool:
 
 
 def divide_rna(rna: str) -> str:
+    """Given an rna strand, divides it up into pairs of 3.
+    >>> divide_rna("AUGGAG")
+    'AUG GAG'
+    >>> divide_rna("AAGU")
+    'AAG U'
+    """
     rna = rna.upper()
     wrapper = textwrap.wrap(rna, 3)
     divided = ""
@@ -301,6 +324,10 @@ def divide_rna(rna: str) -> str:
 
 
 def convert_to_aa(rna: str) -> str:
+    """Given rna, returns the corresponding amino acids as a string. Codons contains the rna sequences associated
+    with each amino acid.
+    """
+    # Add each of the codons (triplets) to a single list
     divided_rna = divide_rna(rna).split(" ")
     aa = ""
     codons = {"Ala": ["GCA", "GCC", "GCG", "GCU"], "Cys": ["UGC", "UGU"], "Asp": ["GAC", "GAU"],
@@ -312,6 +339,7 @@ def convert_to_aa(rna: str) -> str:
               "His": ["CAU", "CAC"], "Glu": ["GAA", "GAG"], "Lys": ["AAA", "AAG"],
               "Arg": ["CGU", "CGC", "CGA", "CGG", "AGA", "AGG"], "Stop": ["UAA", "UAG", "UGA"]}
 
+    # Iterate through divided_rna and add the corresponding amino acid to aa
     for triplet in divided_rna:
         for key, value in codons.items():
             if triplet in value and aa == "":
@@ -322,8 +350,54 @@ def convert_to_aa(rna: str) -> str:
 
 # todo
 # A modified version of DNA by Al Sweigart al@inventwithpython.com
-def dna_animation(template: str):
-    return
+
+def dna_animation(template: str, pause: float):
+    compliment = find_compliment(template)
+
+    # These are the individual rows of the DNA animation:
+    ROWS = [
+        # 123456789 <- Use this to measure the number of spaces:
+        '         ##',  # Index 0 has no {}.
+        '        #{}-{}#',
+        '       #{}---{}#',
+        '      #{}-----{}#',
+        '     #{}------{}#',
+        '    #{}------{}#',
+        '    #{}-----{}#',
+        '     #{}---{}#',
+        '     #{}-{}#',
+        '      ##',  # Index 9 has no {}.
+        '     #{}-{}#',
+        '     #{}---{}#',
+        '    #{}-----{}#',
+        '    #{}------{}#',
+        '     #{}------{}#',
+        '      #{}-----{}#',
+        '       #{}---{}#',
+        '        #{}-{}#']
+    # 123456789 <- Use this to measure the number of spaces:
+
+    time.sleep(2)
+    row_index = 0
+    i = 0
+    while True:
+        # Increment row_index to draw next row:
+        row_index = row_index + 1
+        if row_index == len(ROWS):
+            row_index = 0
+        # Row indexes 0 and 9 don't have nucleotides:
+        if row_index == 0 or row_index == 9:
+            print(ROWS[row_index])
+        # Select random nucleotide pairs, guanine-cytosine and
+        # adenine-thymine:
+
+        left_nucleotide = template[i]
+        right_nucleotide = compliment[i]
+
+        # Print the row.
+        print(ROWS[row_index].format(left_nucleotide, right_nucleotide))
+        i += 1
+        time.sleep(pause)  # Add a slight pause.
 
 
 if __name__ == "__main__":
